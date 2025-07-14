@@ -103,13 +103,35 @@ def load_and_preprocess_data(file_path, dataset_name="Unknown"):
     if 'Status' in df_clean.columns:
         df_clean['Status'] = df_clean['Status'].str.strip()
     
-    # Filter for sold properties for main analysis
-    df_sold = df_clean[df_clean['Status'] == 'Sold'].copy() if 'Status' in df_clean.columns else df_clean.copy()
+    # Filter for sold, pending, and active properties for comprehensive market analysis
+    if 'Status' in df_clean.columns:
+        df_sold = df_clean[df_clean['Status'].isin(['Sold', 'Active', 'Pending', 'Pending Inspection', 'Pending Short Sale'])].copy()
+    else:
+        df_sold = df_clean.copy()
     
-    # Remove obvious outliers (properties with extreme values)
-    if 'Selling Price' in df_sold.columns:
-        # Remove properties with selling price < $50k or > $2M (likely data errors)
-        df_sold = df_sold[(df_sold['Selling Price'] >= 50000) & (df_sold['Selling Price'] <= 2000000)]
+    # Create unified price column for analysis (use appropriate price based on status)
+    if 'Status' in df_sold.columns:
+        df_sold['Analysis_Price'] = df_sold.apply(lambda row: 
+            row['Selling Price'] if row['Status'] == 'Sold' and pd.notna(row.get('Selling Price')) 
+            else row.get('Current Price', row.get('Listing Price', np.nan)), axis=1)
+    else:
+        df_sold['Analysis_Price'] = df_sold.get('Selling Price', np.nan)
+    
+    # Remove obvious outliers (properties with extreme price values)
+    if 'Analysis_Price' in df_sold.columns:
+        # Remove properties with price < $50k or > $2M (likely data errors)
+        pre_price_filter = len(df_sold)
+        df_sold = df_sold[(df_sold['Analysis_Price'] >= 50000) & 
+                         (df_sold['Analysis_Price'] <= 2000000) & 
+                         (df_sold['Analysis_Price'].notna())]
+        post_price_filter = len(df_sold)
+        
+        if pre_price_filter > post_price_filter:
+            print(f"💰 Filtered out {pre_price_filter - post_price_filter} properties with invalid prices")
+    
+    # Create Analysis_Price per square foot for unified analysis
+    if 'Analysis_Price' in df_sold.columns and 'Finished Sqft' in df_sold.columns:
+        df_sold['Analysis_Price_Per_SqFt'] = df_sold['Analysis_Price'] / df_sold['Finished Sqft']
     
     # Apply strict square footage filter (1100-1900 sq ft for accurate comparisons)
     if 'Finished Sqft' in df_sold.columns:
@@ -140,6 +162,16 @@ def load_and_preprocess_data(file_path, dataset_name="Unknown"):
         
         if year_initial_count > year_filtered_count:
             print(f"🏗️  Filtered out {year_initial_count - year_filtered_count} properties built after 2020")
+    
+    # Filter out ramblers (1-story homes) - focus on multi-story properties
+    if 'Style Code' in df_sold.columns:
+        rambler_initial_count = len(df_sold)
+        # Exclude Style Code "10 - 1 Story" (ramblers)
+        df_sold = df_sold[df_sold['Style Code'] != '10 - 1 Story']
+        rambler_filtered_count = len(df_sold)
+        
+        if rambler_initial_count > rambler_filtered_count:
+            print(f"🏠 Filtered out {rambler_initial_count - rambler_filtered_count} rambler (1-story) properties")
     
     # Specifically eliminate 15807 131st (problematic outlier - 2688 sq ft shouldn't be in 1100-1900 dataset)
     if 'Street Number' in df_sold.columns and 'Street Name' in df_sold.columns:
@@ -181,7 +213,7 @@ def load_all_datasets():
         datasets['Rebecca Ridge'] = {
             'all': df_all_rr,
             'sold': df_sold_rr,
-            'description': 'Rebecca Ridge Neighborhood (1100-1900 sq ft, built 2000-2020)',
+            'description': 'Rebecca Ridge Neighborhood (1100-1900 sq ft, 2+ story, built 2000-2020, sold/pending/active)',
             'total_records': len(df_all_rr),
             'sold_records': len(df_sold_rr)
         }
@@ -195,7 +227,7 @@ def load_all_datasets():
         datasets['Sunrise Area'] = {
             'all': df_all_sunrise,
             'sold': df_sold_sunrise,
-            'description': 'Broader Sunrise Neighborhood (1100-1900 sq ft, built 1991-2020)',
+            'description': 'Broader Sunrise Neighborhood (1100-1900 sq ft, 2+ story, built 1991-2020, sold/pending/active)',
             'total_records': len(df_all_sunrise),
             'sold_records': len(df_sold_sunrise)
         }
