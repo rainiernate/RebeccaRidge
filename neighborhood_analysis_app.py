@@ -11,7 +11,7 @@ from data_preprocessing import load_all_datasets, get_recent_market_data, calcul
 
 # Configure Streamlit page
 st.set_page_config(
-    page_title="Neighborhood Real Estate Analysis",
+    page_title="Rebecca Ridge Real Estate Analysis",
     page_icon="🏠",
     layout="wide",
     initial_sidebar_state="expanded"
