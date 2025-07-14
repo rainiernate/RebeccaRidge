@@ -45,24 +45,6 @@ st.markdown("""
 @st.cache_data
 def load_data():
     """Load and cache all datasets"""
-    import os
-    
-    # Debug information
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    st.write(f"Debug: Current directory: {current_dir}")
-    st.write(f"Debug: Files in directory: {os.listdir(current_dir)}")
-    
-    rebecca_file = os.path.join(current_dir, "RebeccaRidge11001900sqft.txt")
-    sunrise_file = os.path.join(current_dir, "SunriseRebeccaRidge11001900sqft.txt")
-    
-    st.write(f"Debug: Rebecca file exists: {os.path.exists(rebecca_file)}")
-    st.write(f"Debug: Sunrise file exists: {os.path.exists(sunrise_file)}")
-    
-    if os.path.exists(rebecca_file):
-        st.write(f"Debug: Rebecca file size: {os.path.getsize(rebecca_file)} bytes")
-    if os.path.exists(sunrise_file):
-        st.write(f"Debug: Sunrise file size: {os.path.getsize(sunrise_file)} bytes")
-    
     return load_all_datasets()
 
 def create_price_trend_chart(df_sold):
