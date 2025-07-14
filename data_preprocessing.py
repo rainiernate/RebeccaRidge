@@ -201,36 +201,52 @@ def load_and_preprocess_data(file_path, dataset_name="Unknown"):
 def load_all_datasets():
     """Load both Rebecca Ridge and Sunrise datasets"""
     
-    # File paths
-    rebecca_ridge_path = "/Users/nathancoons/RebeccaRidge/RebeccaRidge11001900sqft.txt"
-    sunrise_path = "/Users/nathancoons/RebeccaRidge/SunriseRebeccaRidge11001900sqft.txt"
+    # File paths - use relative paths for deployment
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    rebecca_ridge_path = os.path.join(current_dir, "RebeccaRidge11001900sqft.txt")
+    sunrise_path = os.path.join(current_dir, "SunriseRebeccaRidge11001900sqft.txt")
     
     datasets = {}
     
     try:
-        # Load Rebecca Ridge data
-        df_all_rr, df_sold_rr = load_and_preprocess_data(rebecca_ridge_path, "Rebecca Ridge")
-        datasets['Rebecca Ridge'] = {
-            'all': df_all_rr,
-            'sold': df_sold_rr,
-            'description': 'Rebecca Ridge Neighborhood (1100-1900 sq ft, 2+ story, built 2000-2020, sold/pending/active)',
-            'total_records': len(df_all_rr),
-            'sold_records': len(df_sold_rr)
-        }
+        # Check if file exists first
+        if not os.path.exists(rebecca_ridge_path):
+            print(f"Rebecca Ridge file not found at: {rebecca_ridge_path}")
+            print(f"Current directory: {current_dir}")
+            print(f"Files in directory: {os.listdir(current_dir)}")
+            datasets['Rebecca Ridge'] = None
+        else:
+            # Load Rebecca Ridge data
+            df_all_rr, df_sold_rr = load_and_preprocess_data(rebecca_ridge_path, "Rebecca Ridge")
+            datasets['Rebecca Ridge'] = {
+                'all': df_all_rr,
+                'sold': df_sold_rr,
+                'description': 'Rebecca Ridge Neighborhood (1100-1900 sq ft, 2+ story, built 2000-2020, sold/pending/active)',
+                'total_records': len(df_all_rr),
+                'sold_records': len(df_sold_rr)
+            }
     except Exception as e:
         print(f"Error loading Rebecca Ridge data: {e}")
         datasets['Rebecca Ridge'] = None
     
     try:
-        # Load Sunrise data
-        df_all_sunrise, df_sold_sunrise = load_and_preprocess_data(sunrise_path, "Sunrise Area")
-        datasets['Sunrise Area'] = {
-            'all': df_all_sunrise,
-            'sold': df_sold_sunrise,
-            'description': 'Broader Sunrise Neighborhood (1100-1900 sq ft, 2+ story, built 1991-2020, sold/pending/active)',
-            'total_records': len(df_all_sunrise),
-            'sold_records': len(df_sold_sunrise)
-        }
+        # Check if file exists first
+        if not os.path.exists(sunrise_path):
+            print(f"Sunrise file not found at: {sunrise_path}")
+            print(f"Current directory: {current_dir}")
+            print(f"Files in directory: {os.listdir(current_dir)}")
+            datasets['Sunrise Area'] = None
+        else:
+            # Load Sunrise data
+            df_all_sunrise, df_sold_sunrise = load_and_preprocess_data(sunrise_path, "Sunrise Area")
+            datasets['Sunrise Area'] = {
+                'all': df_all_sunrise,
+                'sold': df_sold_sunrise,
+                'description': 'Broader Sunrise Neighborhood (1100-1900 sq ft, 2+ story, built 1991-2020, sold/pending/active)',
+                'total_records': len(df_all_sunrise),
+                'sold_records': len(df_sold_sunrise)
+            }
     except Exception as e:
         print(f"Error loading Sunrise data: {e}")
         datasets['Sunrise Area'] = None
