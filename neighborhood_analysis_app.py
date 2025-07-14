@@ -575,7 +575,15 @@ def main():
                 
                 st.markdown("**Recommendation:** The extensive improvements and premium positioning justify a premium price point to capture the luxury market while remaining competitive within the established range. This strategy leverages the current seller-favorable conditions in your segment while the extensive improvements justify the premium over standard comparable properties.")
                 
-                st.markdown("**Market Timing Alert:** The real estate market is moving every day and appears to be slipping. While current conditions favor sellers in your size segment, this window may not stick around. Acting decisively on pricing and marketing strategy is essential to capitalize on present market conditions before they shift.")
+                # Market Timing Alert Box - More Visible
+                st.markdown("""
+                <div style="background-color: #fff3cd; padding: 1.5rem; border-radius: 0.8rem; border-left: 4px solid #ffc107; margin: 2rem 0; border: 1px solid #ffeaa7;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #856404;"><i>⚠️ Market Timing Alert</i></h4>
+                    <p style="margin: 0; color: #856404; font-weight: 500;">
+                        The real estate market is moving every day and appears to be slipping. While current conditions favor sellers in your size segment, <strong>this window may not stick around</strong>. Acting decisively on pricing and marketing strategy is essential to capitalize on present market conditions before they shift.
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
                 
                 # Simple bottom line in box
                 st.markdown(f"""
@@ -653,6 +661,16 @@ def main():
         """, unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Market Timing Alert in Analysis Tab
+        st.markdown("""
+        <div style="background-color: #fff3cd; padding: 1.5rem; border-radius: 0.8rem; border-left: 4px solid #ffc107; margin: 2rem 0; border: 1px solid #ffeaa7;">
+            <h4 style="margin: 0 0 0.5rem 0; color: #856404;"><i>⚠️ Market Timing Alert</i></h4>
+            <p style="margin: 0; color: #856404; font-weight: 500;">
+                Market conditions are shifting daily. Current seller-favorable trends in your size segment may not persist. <strong>Time-sensitive opportunity</strong> - act quickly while conditions remain favorable.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # === SECTION 1: HISTORICAL MARKET PERFORMANCE ===
         st.markdown("---")
@@ -979,6 +997,15 @@ def main():
     
     # === PRICING TAB ===
     with pricing_tab:
+        # Market Timing Alert at top of pricing tab
+        st.markdown("""
+        <div style="background-color: #fff3cd; padding: 1.5rem; border-radius: 0.8rem; border-left: 4px solid #ffc107; margin: 2rem 0; border: 1px solid #ffeaa7;">
+            <h4 style="margin: 0 0 0.5rem 0; color: #856404;"><i>⚠️ Market Timing Alert</i></h4>
+            <p style="margin: 0; color: #856404; font-weight: 500;">
+                Market conditions are shifting daily and appear to be slipping. <strong>This pricing window may not last</strong>. Quick action on pricing strategy is essential to capitalize on current market conditions.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         if len(available_datasets) > 1:  # Show when both datasets available
             # Header with property details
             st.markdown("""
@@ -1197,6 +1224,16 @@ def main():
     
     # === NET PROCEEDS TAB ===
     with proceeds_tab:
+        # Market Timing Alert at top of net proceeds tab
+        st.markdown("""
+        <div style="background-color: #fff3cd; padding: 1.5rem; border-radius: 0.8rem; border-left: 4px solid #ffc107; margin: 2rem 0; border: 1px solid #ffeaa7;">
+            <h4 style="margin: 0 0 0.5rem 0; color: #856404;"><i>⚠️ Market Timing Alert</i></h4>
+            <p style="margin: 0; color: #856404; font-weight: 500;">
+                Market conditions are changing rapidly. <strong>Current pricing may not hold</strong> if market continues to slip. Consider these proceeds calculations as time-sensitive projections.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
         if len(available_datasets) > 1:
             # Get pricing data
             sunrise_sold = sunrise_data.get('sold', pd.DataFrame())
