@@ -45,3 +45,11 @@ The application provides a tab-based interface for easy navigation through diffe
 ## Deployment
 
 This application is deployed on Streamlit Community Cloud.
+
+## Live Application
+
+Access the live app at: https://rebeccaridge.streamlit.app (or your deployed URL)
+
+## Market Timing Features
+
+The application includes prominent market timing alerts throughout all tabs, emphasizing the time-sensitive nature of current market conditions and the importance of quick decision-making in a shifting market.
