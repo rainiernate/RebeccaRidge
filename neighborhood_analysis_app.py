@@ -581,7 +581,7 @@ def main():
                 
                 st.markdown("**Market Dynamics:** The current real estate market is experiencing mixed trends that strongly favor your property's positioning. The market is experiencing a mix of trends, with larger homes over 2,000 square feet facing longer market times, while homes in the 1,100-1,900 square foot range continue to favor sellers. Your 1,576 square foot home sits in the optimal size category for current buyer demand.")
                 
-                st.markdown("**Competitive Advantages:** This property benefits from over $100,000 in premium upgrades that justify the premium positioning. Key improvements include a complete roof replacement, new AC system, custom built staircase, and elegant custom deck on the structural side, complemented by a luxury kitchen remodel, custom master suite with elegant shower, custom built-ins, high tech wiring, shiplap feature walls, and new premium flooring throughout the main floor with abundant natural light. These improvements position the home as move-in ready luxury rather than a fixer-upper.")
+                st.markdown("**Competitive Advantages:** This property benefits from over $100,000 in premium upgrades that justify the premium positioning. Key improvements include a complete roof replacement, new AC system, custom built staircase, and elegant custom deck on the structural side, complemented by a luxury kitchen remodel, custom master suite with spa-like shower, custom built-ins, high tech wiring, shiplap feature walls, and new premium flooring throughout the main floor with abundant natural light. These improvements position the home as move-in ready luxury rather than a fixer-upper.")
                 
                 
                 st.markdown("**Strategic Positioning:** The extensive remodel elevates this property above standard market offerings. The combination of structural improvements (roof, HVAC, custom staircase, deck) and luxury interior upgrades (kitchen, master suite, shower, built-ins, premium flooring, feature walls) creates a compelling value proposition for buyers seeking turnkey luxury.")
@@ -617,6 +617,7 @@ def main():
     with analysis_tab:
         # Key metrics overview - simplified for client presentation
         st.header("📊 Current Market Snapshot")
+        st.markdown("*Based on Sunrise area data (1,100-1,900 sq ft, 2+ story, built through 2020, last 12 months)*")
         
         recent_data = get_recent_market_data(df_sold, 12)
         recent_stats = calculate_market_stats(recent_data)
@@ -1090,6 +1091,7 @@ def main():
                         <h4 style="margin: 0; color: #495057;">Market Speed</h4>
                         <h2 style="margin: 0.5rem 0; color: {speed_color};">{pricing['sunrise_dom']:.0f} days</h2>
                         <p style="margin: 0; color: #6c757d; font-size: 0.9em;">{market_speed}</p>
+                        <p style="margin: 0.5rem 0 0 0; color: #6c757d; font-size: 0.8em; font-style: italic;">Premium luxury homes typically take 30-60 days</p>
                     </div>
                     """, unsafe_allow_html=True)
                 
@@ -1109,7 +1111,7 @@ def main():
                             • <strong>New roof</strong> - Complete replacement<br>
                             • <strong>New AC system</strong> - Modern HVAC<br>
                             • <strong>Custom built staircase</strong> - Architectural feature<br>
-                            • <strong>Custom built elegant deck</strong> - Outdoor living space
+                            • <strong>Custom built deck</strong> - Outdoor living space
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -1121,7 +1123,7 @@ def main():
                         <div style="color: #495057;">
                             • <strong>Luxury kitchen remodel</strong> - High-end finishes<br>
                             • <strong>Custom master suite</strong> - Completely redesigned<br>
-                            • <strong>Elegant custom shower</strong> - Spa-like experience<br>
+                            • <strong>Spa-like custom shower</strong> - Luxury experience<br>
                             • <strong>Custom built-ins</strong> - Integrated storage solutions<br>
                             • <strong>High tech wiring</strong> - Modern electrical systems<br>
                             • <strong>Shiplap feature walls</strong> - Designer accent walls<br>
@@ -1273,7 +1275,9 @@ def main():
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    commission_rate = st.slider("Real Estate Commission (%)", 2.0, 7.0, 5.0, 0.5)
+                    listing_agent_rate = st.slider("Listing Agent Compensation (%)", 1.0, 4.0, 2.5, 0.25)
+                    selling_agent_rate = st.slider("Selling Agent Compensation (%)", 0.0, 4.0, 2.5, 0.25, help="Not mandatory - set to 0 if not offering")
+                    commission_rate = listing_agent_rate + selling_agent_rate
                     title_insurance = st.number_input("Title Insurance", value=1300, step=100)
                     escrow_fees = st.number_input("Escrow Fees", value=1400, step=100)
                     mortgage_payoff = st.number_input("Mortgage Payoff", value=285000, step=1000, help="Remaining balance on current mortgage")
@@ -1303,10 +1307,14 @@ def main():
                 col1, col2 = st.columns(2)
                 
                 with col1:
+                    listing_commission = final_sale_price * (listing_agent_rate / 100)
+                    selling_commission = final_sale_price * (selling_agent_rate / 100)
+                    
                     st.markdown(f"""
                     **Sale Details:**
                     - **Sale Price:** ${final_sale_price:,.0f}
-                    - **Real Estate Commission ({commission_rate}%):** ${commission:,.0f}
+                    - **Listing Agent Compensation ({listing_agent_rate}%):** ${listing_commission:,.0f}
+                    - **Selling Agent Compensation ({selling_agent_rate}%):** ${selling_commission:,.0f}
                     - **Title & Escrow:** ${title_insurance + escrow_fees:,.0f}
                     - **Excise Tax:** ${excise_tax:,.0f}
                     - **Other Taxes & Fees:** ${transfer_tax + misc_fees:,.0f}
