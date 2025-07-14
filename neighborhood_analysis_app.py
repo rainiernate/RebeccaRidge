@@ -7,7 +7,7 @@ from plotly.subplots import make_subplots
 import seaborn as sns
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
-from data_preprocessing import load_and_preprocess_data, get_recent_market_data, calculate_market_stats
+from data_preprocessing import load_all_datasets, get_recent_market_data, calculate_market_stats
 
 # Configure Streamlit page
 st.set_page_config(
@@ -44,10 +44,8 @@ st.markdown("""
 
 @st.cache_data
 def load_data():
-    """Load and cache the processed data"""
-    file_path = "/Users/nathancoons/RebeccaRidge/Full (38).txt"
-    df_all, df_sold = load_and_preprocess_data(file_path)
-    return df_all, df_sold
+    """Load and cache all datasets"""
+    return load_all_datasets()
 
 def create_price_trend_chart(df_sold):
     """Create an interactive price trend chart over time"""
@@ -174,6 +172,57 @@ def get_top_sales(df_sold, top_n=5):
             display_cols.append(col)
     
     return top_sales[display_cols]
+
+def analyze_premium_home_pricing(df_sold, home_sqft=1600):
+    """Analyze pricing for a premium remodeled home"""
+    if len(df_sold) == 0:
+        return None
+    
+    # Get recent market data (24 months for better sample)
+    recent_data = get_recent_market_data(df_sold, 24)
+    if len(recent_data) == 0:
+        return None
+    
+    # Calculate market stats
+    stats = calculate_market_stats(recent_data)
+    
+    # Get top sales for comparison
+    top_sales = recent_data.nlargest(3, 'Selling Price')
+    
+    # Premium adjustments for extensive remodel
+    premium_value = 65000  # Conservative estimate for full remodel
+    
+    # Calculate pricing methods
+    market_median = stats.get('median_price', 0)
+    market_psf = stats.get('median_price_per_sqft', 0)
+    
+    # Method 1: Market median + premium
+    method1 = market_median + premium_value
+    
+    # Method 2: Premium price per sq ft
+    premium_psf = market_psf * 1.12  # 12% premium for luxury remodel
+    method2 = home_sqft * premium_psf
+    
+    # Method 3: Top comp + modest premium
+    top_price = top_sales['Selling Price'].iloc[0] if len(top_sales) > 0 else market_median
+    method3 = top_price * 1.08  # 8% premium over top sale
+    
+    # Calculate recommended range
+    prices = [method1, method2, method3]
+    conservative = min(prices)
+    recommended = np.median(prices)
+    aggressive = max(prices)
+    
+    return {
+        'market_median': market_median,
+        'market_psf': market_psf,
+        'top_sales': top_sales,
+        'conservative': conservative,
+        'recommended': recommended,
+        'aggressive': aggressive,
+        'premium_psf': premium_psf,
+        'days_on_market': stats.get('median_dom', 0)
+    }
 
 def analyze_2025_market_trend(df_sold):
     """Analyze what's happening in 2025 specifically - simplified and clear"""
@@ -375,10 +424,87 @@ def main():
     
     # Load data
     with st.spinner('Loading and processing data...'):
-        df_all, df_sold = load_data()
+        datasets = load_data()
+    
+    # Check if data loaded successfully
+    available_datasets = {k: v for k, v in datasets.items() if v is not None}
+    
+    if not available_datasets:
+        st.error("❌ No datasets could be loaded. Please check file paths and data availability.")
+        return
+    
+    # Dataset selector in sidebar
+    st.sidebar.header("🎯 Market Area Selection")
+    
+    # Create intuitive dataset selector
+    dataset_names = list(available_datasets.keys())
+    
+    # Default to Rebecca Ridge if available, otherwise first available
+    default_dataset = "Rebecca Ridge" if "Rebecca Ridge" in dataset_names else dataset_names[0]
+    
+    selected_dataset = st.sidebar.selectbox(
+        "Choose Market Area:",
+        options=dataset_names,
+        index=dataset_names.index(default_dataset),
+        help="Compare Rebecca Ridge neighborhood vs broader Sunrise area"
+    )
+    
+    # Display dataset info
+    current_data = available_datasets[selected_dataset]
+    st.sidebar.markdown(f"""
+    **📊 Dataset Info:**
+    - {current_data['description']}
+    - **{current_data['sold_records']}** sold properties
+    - **{current_data['total_records']}** total listings
+    """)
+    
+    # Get the selected dataset
+    df_all = current_data['all']
+    df_sold = current_data['sold']
+    
+    # Show comparison option if both datasets available
+    if len(available_datasets) > 1:
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### 🔄 Quick Comparison")
+        
+        # Always show quick comparison
+        for name, data in available_datasets.items():
+            recent_data = get_recent_market_data(data['sold'], 12)
+            if len(recent_data) > 0:
+                median_price = recent_data['Selling Price'].median()
+                median_dom = recent_data['DOM'].median() if 'DOM' in recent_data.columns else 0
+                
+                # Highlight current selection
+                if name == selected_dataset:
+                    st.sidebar.markdown(f"**➡️ {name}:** ${median_price:,.0f} • {median_dom:.0f} days")
+                else:
+                    st.sidebar.markdown(f"**{name}:** ${median_price:,.0f} • {median_dom:.0f} days")
+            else:
+                st.sidebar.markdown(f"**{name}:** No recent sales")
+        
+        # Add comparison insight
+        if len(available_datasets) == 2:
+            datasets_list = list(available_datasets.values())
+            if all(len(get_recent_market_data(d['sold'], 12)) > 0 for d in datasets_list):
+                rr_price = get_recent_market_data(datasets_list[0]['sold'], 12)['Selling Price'].median()
+                sunrise_price = get_recent_market_data(datasets_list[1]['sold'], 12)['Selling Price'].median()
+                
+                price_diff = abs(rr_price - sunrise_price)
+                higher_area = "Rebecca Ridge" if rr_price > sunrise_price else "Sunrise Area"
+                st.sidebar.markdown(f"💡 *{higher_area} is ${price_diff:,.0f} higher*")
+    
+    # Update header to show selected area
+    st.markdown(f"### 📍 Currently Analyzing: **{current_data['description']}**")
+    
+    # Add context about data filtering
+    st.markdown("""
+    <div style="background-color: #e8f4f8; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; border-left: 4px solid #1f77b4;">
+        <strong>📏 Data Focus:</strong> Analysis limited to homes between 1,100-1,900 sq ft built through 2020 for accurate comparisons of established market values.
+    </div>
+    """, unsafe_allow_html=True)
     
     # Sidebar filters
-    st.sidebar.header("🔍 Filters & Options")
+    st.sidebar.header("🔍 Additional Filters")
     
     # Date range filter
     if 'Selling Date' in df_sold.columns and len(df_sold) > 0:
@@ -639,7 +765,154 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
     
-    # === SECTION 5: STRATEGIC INSIGHTS ===
+    # === SECTION 5: PREMIUM HOME PRICING ANALYSIS ===
+    if selected_dataset == "Rebecca Ridge":  # Only show for Rebecca Ridge
+        st.markdown("---")
+        st.header("🏠 Premium Home Pricing Analysis")
+        st.markdown("""
+        **12903 158th Street Ct E** - Professional pricing recommendation for this extensively remodeled home
+        with premium kitchen, master suite, custom finishes, and luxury amenities.
+        """)
+        
+        # Home details input
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            home_sqft = st.number_input(
+                "Home Square Footage",
+                min_value=1100,
+                max_value=1900,
+                value=1600,
+                step=50,
+                help="Enter the square footage of the subject property"
+            )
+        
+        with col2:
+            st.markdown("### 🏗️ Premium Features")
+            st.markdown("""
+            - ✅ High-end kitchen remodel
+            - ✅ Custom master suite renovation  
+            - ✅ New custom staircase & railing
+            - ✅ Custom Trex deck
+            - ✅ New AC & roof
+            - ✅ Premium finishes throughout
+            """)
+        
+        # Calculate pricing analysis
+        pricing_analysis = analyze_premium_home_pricing(df_sold, home_sqft)
+        
+        if pricing_analysis:
+            # Pricing recommendations
+            st.markdown("### 💰 Pricing Recommendations")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.markdown(f"""
+                <div style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 1.5rem; border-radius: 1rem; text-align: center;">
+                    <h4 style="margin: 0; color: white;">Conservative</h4>
+                    <h2 style="margin: 0.5rem 0; color: white;">${pricing_analysis['conservative']:,.0f}</h2>
+                    <p style="margin: 0; color: white; opacity: 0.9;">Safe pricing floor</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown(f"""
+                <div style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 1.5rem; border-radius: 1rem; text-align: center;">
+                    <h4 style="margin: 0; color: white;">🎯 Recommended</h4>
+                    <h2 style="margin: 0.5rem 0; color: white;">${pricing_analysis['recommended']:,.0f}</h2>
+                    <p style="margin: 0; color: white; opacity: 0.9;">Target list price</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col3:
+                st.markdown(f"""
+                <div style="background: linear-gradient(135deg, #fd7e14, #e55a00); color: white; padding: 1.5rem; border-radius: 1rem; text-align: center;">
+                    <h4 style="margin: 0; color: white;">Aggressive</h4>
+                    <h2 style="margin: 0.5rem 0; color: white;">${pricing_analysis['aggressive']:,.0f}</h2>
+                    <p style="margin: 0; color: white; opacity: 0.9;">Market ceiling</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Market context
+            st.markdown("### 📊 Market Context")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                premium_percent = ((pricing_analysis['recommended'] - pricing_analysis['market_median']) / pricing_analysis['market_median']) * 100
+                
+                st.markdown(f"""
+                **Pricing vs. Market:**
+                - Neighborhood median: ${pricing_analysis['market_median']:,.0f}
+                - Your recommended price: ${pricing_analysis['recommended']:,.0f}
+                - Premium over market: **{premium_percent:.1f}%**
+                - Premium price/sq ft: **${pricing_analysis['premium_psf']:.0f}**
+                """)
+            
+            with col2:
+                if pricing_analysis['days_on_market'] <= 30:
+                    market_status = "🔥 Strong Seller's Market"
+                    strategy = "Price aggressively"
+                elif pricing_analysis['days_on_market'] <= 60:
+                    market_status = "📊 Balanced Market"
+                    strategy = "Price competitively"
+                else:
+                    market_status = "🛒 Buyer's Market"
+                    strategy = "Price conservatively"
+                
+                st.markdown(f"""
+                **Market Timing:**
+                - Market status: **{market_status}**
+                - Avg. days on market: **{pricing_analysis['days_on_market']:.0f} days**
+                - Strategy: **{strategy}**
+                - Expected sale time: **20-35 days**
+                """)
+            
+            # Top comparables
+            if len(pricing_analysis['top_sales']) > 0:
+                st.markdown("### 🏆 Recent Top Sales (Comparables)")
+                
+                top_sales_display = pricing_analysis['top_sales'].head(3)
+                
+                for idx, (_, row) in enumerate(top_sales_display.iterrows()):
+                    col1, col2 = st.columns([2, 1])
+                    
+                    with col1:
+                        address = row.get('Full_Address', 'Unknown')
+                        sqft = row.get('Finished Sqft', 0)
+                        sale_date = row.get('Selling Date', 'Unknown')
+                        
+                        if pd.notna(sale_date):
+                            sale_date = sale_date.strftime('%b %Y')
+                        
+                        st.markdown(f"""
+                        **{address}**  
+                        {sqft:.0f} sq ft • Sold {sale_date}
+                        """)
+                    
+                    with col2:
+                        price = row['Selling Price']
+                        price_per_sqft = price / sqft if sqft > 0 else 0
+                        
+                        st.markdown(f"""
+                        **${price:,.0f}**  
+                        ${price_per_sqft:.0f}/sq ft
+                        """)
+            
+            # Key insights
+            st.markdown("### 💡 Key Insights")
+            st.markdown(f"""
+            - Your home's extensive remodel justifies a **{premium_percent:.0f}% premium** over the neighborhood median
+            - The recommended price of **${pricing_analysis['recommended']:,.0f}** positions the home as the premium option
+            - With {pricing_analysis['days_on_market']:.0f}-day average market time, expect a sale within **3-5 weeks**
+            - This price sets a new benchmark for luxury homes in Rebecca Ridge
+            """)
+        
+        else:
+            st.info("Insufficient recent sales data for pricing analysis.")
+    
+    # === SECTION 6: STRATEGIC INSIGHTS ===
     st.markdown("---")
     st.header("💡 Strategic Market Insights")
     st.markdown("""

@@ -24,11 +24,14 @@ def clean_date_column(date_str):
     except:
         return pd.NaT
 
-def load_and_preprocess_data(file_path):
+def load_and_preprocess_data(file_path, dataset_name="Unknown"):
     """Load and preprocess the MLS data"""
     
     # Read the tab-delimited file
     df = pd.read_csv(file_path, sep='\t', low_memory=False)
+    
+    # Add dataset identifier
+    df['Dataset'] = dataset_name
     
     # Define the most pertinent columns for analysis
     key_columns = [
@@ -108,15 +111,99 @@ def load_and_preprocess_data(file_path):
         # Remove properties with selling price < $50k or > $2M (likely data errors)
         df_sold = df_sold[(df_sold['Selling Price'] >= 50000) & (df_sold['Selling Price'] <= 2000000)]
     
+    # Apply strict square footage filter (1100-1900 sq ft for accurate comparisons)
     if 'Finished Sqft' in df_sold.columns:
-        # Remove properties with < 200 sqft or > 8000 sqft (likely data errors)
-        df_sold = df_sold[(df_sold['Finished Sqft'] >= 200) & (df_sold['Finished Sqft'] <= 8000)]
+        initial_count = len(df_sold)
+        # STRICT filtering - must be between 1100-1900 sq ft exactly
+        df_sold = df_sold[(df_sold['Finished Sqft'] >= 1100) & 
+                         (df_sold['Finished Sqft'] <= 1900) & 
+                         (df_sold['Finished Sqft'] > 0) & 
+                         (df_sold['Finished Sqft'].notna())]
+        sqft_filtered_count = len(df_sold)
+        
+        if initial_count > sqft_filtered_count:
+            print(f"📏 Filtered out {initial_count - sqft_filtered_count} properties outside 1100-1900 sq ft range")
+        
+        # Double-check: log any remaining properties outside range (shouldn't happen)
+        outliers = df_sold[(df_sold['Finished Sqft'] < 1100) | (df_sold['Finished Sqft'] > 1900)]
+        if len(outliers) > 0:
+            print(f"⚠️  WARNING: {len(outliers)} properties still outside range after filtering!")
+            for idx, row in outliers.iterrows():
+                print(f"   - {row.get('Full_Address', 'Unknown')}: {row['Finished Sqft']} sq ft")
+    
+    # Filter out newer construction (built after 2020) to avoid skewing analysis with new construction
+    if 'Year Built' in df_sold.columns:
+        year_initial_count = len(df_sold)
+        # Keep homes built in 2020 or earlier, and handle missing year built data
+        df_sold = df_sold[(df_sold['Year Built'] <= 2020) | df_sold['Year Built'].isna()]
+        year_filtered_count = len(df_sold)
+        
+        if year_initial_count > year_filtered_count:
+            print(f"🏗️  Filtered out {year_initial_count - year_filtered_count} properties built after 2020")
+    
+    # Specifically eliminate 15807 131st (problematic outlier - 2688 sq ft shouldn't be in 1100-1900 dataset)
+    if 'Street Number' in df_sold.columns and 'Street Name' in df_sold.columns:
+        pre_elimination = len(df_sold)
+        df_sold = df_sold[~((df_sold['Street Number'] == 15807) & 
+                           (df_sold['Street Name'].str.contains('131st', case=False, na=False)))]
+        post_elimination = len(df_sold)
+        
+        if pre_elimination > post_elimination:
+            print(f"🚫 Specifically eliminated 15807 131st property ({pre_elimination - post_elimination} properties removed)")
+    
+    # Additional check: Remove any property with Full_Address containing "15807 131st" (backup filter)
+    if 'Full_Address' in df_sold.columns:
+        pre_backup = len(df_sold)
+        df_sold = df_sold[~df_sold['Full_Address'].str.contains('15807 131st', case=False, na=False)]
+        post_backup = len(df_sold)
+        
+        if pre_backup > post_backup:
+            print(f"🚫 Backup filter removed {pre_backup - post_backup} additional 15807 131st properties")
     
     # Sort by selling date for time series analysis
     if 'Selling Date' in df_sold.columns:
         df_sold = df_sold.sort_values('Selling Date')
     
     return df_clean, df_sold
+
+def load_all_datasets():
+    """Load both Rebecca Ridge and Sunrise datasets"""
+    
+    # File paths
+    rebecca_ridge_path = "/Users/nathancoons/RebeccaRidge/RebeccaRidge11001900sqft.txt"
+    sunrise_path = "/Users/nathancoons/RebeccaRidge/SunriseRebeccaRidge11001900sqft.txt"
+    
+    datasets = {}
+    
+    try:
+        # Load Rebecca Ridge data
+        df_all_rr, df_sold_rr = load_and_preprocess_data(rebecca_ridge_path, "Rebecca Ridge")
+        datasets['Rebecca Ridge'] = {
+            'all': df_all_rr,
+            'sold': df_sold_rr,
+            'description': 'Rebecca Ridge Neighborhood (1100-1900 sq ft, built 2000-2020)',
+            'total_records': len(df_all_rr),
+            'sold_records': len(df_sold_rr)
+        }
+    except Exception as e:
+        print(f"Error loading Rebecca Ridge data: {e}")
+        datasets['Rebecca Ridge'] = None
+    
+    try:
+        # Load Sunrise data
+        df_all_sunrise, df_sold_sunrise = load_and_preprocess_data(sunrise_path, "Sunrise Area")
+        datasets['Sunrise Area'] = {
+            'all': df_all_sunrise,
+            'sold': df_sold_sunrise,
+            'description': 'Broader Sunrise Neighborhood (1100-1900 sq ft, built 1991-2020)',
+            'total_records': len(df_all_sunrise),
+            'sold_records': len(df_sold_sunrise)
+        }
+    except Exception as e:
+        print(f"Error loading Sunrise data: {e}")
+        datasets['Sunrise Area'] = None
+    
+    return datasets
 
 # Function to get recent market data (last 12 months)
 def get_recent_market_data(df_sold, months_back=12):
@@ -185,21 +272,26 @@ def calculate_market_stats(df_sold):
     return stats
 
 if __name__ == "__main__":
-    # Test the preprocessing
-    file_path = "/Users/nathancoons/RebeccaRidge/Full (38).txt"
-    df_all, df_sold = load_and_preprocess_data(file_path)
+    # Test the preprocessing with new datasets
+    datasets = load_all_datasets()
     
-    print(f"Total records: {len(df_all)}")
-    print(f"Sold properties: {len(df_sold)}")
-    print(f"Date range: {df_sold['Selling Date'].min()} to {df_sold['Selling Date'].max()}")
-    
-    # Show some basic stats
-    recent_data = get_recent_market_data(df_sold, 12)
-    stats = calculate_market_stats(recent_data)
-    
-    print("\nRecent Market Stats (Last 12 months):")
-    for key, value in stats.items():
-        if isinstance(value, float):
-            print(f"{key}: ${value:,.2f}" if 'price' in key else f"{key}: {value:.2f}")
+    print("=== Dataset Loading Test ===")
+    for name, data in datasets.items():
+        if data is not None:
+            print(f"\n{name}:")
+            print(f"  Description: {data['description']}")
+            print(f"  Total records: {data['total_records']}")
+            print(f"  Sold properties: {data['sold_records']}")
+            
+            df_sold = data['sold']
+            if len(df_sold) > 0 and 'Selling Date' in df_sold.columns:
+                print(f"  Date range: {df_sold['Selling Date'].min()} to {df_sold['Selling Date'].max()}")
+                
+                # Show recent stats
+                recent_data = get_recent_market_data(df_sold, 12)
+                if len(recent_data) > 0:
+                    stats = calculate_market_stats(recent_data)
+                    print(f"  Recent median price: ${stats.get('median_price', 0):,.0f}")
+                    print(f"  Recent median DOM: {stats.get('median_dom', 0):.0f} days")
         else:
-            print(f"{key}: {value}")
+            print(f"\n{name}: FAILED TO LOAD")
