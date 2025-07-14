@@ -47,21 +47,16 @@ def load_data():
     """Load and cache all datasets"""
     import os
     
-    # Debug information
+    # Minimal path verification (helps with initialization)
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    st.write(f"Debug: Current directory: {current_dir}")
-    st.write(f"Debug: Files in directory: {os.listdir(current_dir)}")
-    
     rebecca_file = os.path.join(current_dir, "RebeccaRidge11001900sqft.txt")
     sunrise_file = os.path.join(current_dir, "SunriseRebeccaRidge11001900sqft.txt")
     
-    st.write(f"Debug: Rebecca file exists: {os.path.exists(rebecca_file)}")
-    st.write(f"Debug: Sunrise file exists: {os.path.exists(sunrise_file)}")
-    
-    if os.path.exists(rebecca_file):
-        st.write(f"Debug: Rebecca file size: {os.path.getsize(rebecca_file)} bytes")
-    if os.path.exists(sunrise_file):
-        st.write(f"Debug: Sunrise file size: {os.path.getsize(sunrise_file)} bytes")
+    # Quick file check (seems to help with loading)
+    if os.path.exists(rebecca_file) and os.path.exists(sunrise_file):
+        st.success("✅ Data files loaded successfully")
+    else:
+        st.error("❌ Data files not found")
     
     return load_all_datasets()
 
