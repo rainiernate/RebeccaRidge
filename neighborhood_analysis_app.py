@@ -560,7 +560,7 @@ def main():
         if len(available_datasets) > 1:
             sunrise_sold = sunrise_data.get('sold', pd.DataFrame())
             rebecca_sold = rebecca_data.get('sold', pd.DataFrame())
-            pricing = analyze_premium_home_pricing(sunrise_sold, rebecca_sold, 1600)
+            pricing = analyze_premium_home_pricing(sunrise_sold, rebecca_sold, 1576)
             recent_data = get_recent_market_data(df_sold, 12)
             recent_stats = calculate_market_stats(recent_data)
             
@@ -579,7 +579,7 @@ def main():
                 
                 st.markdown("**Property:** 12903 158th Street Ct E represents a premium luxury home opportunity in an optimal market segment. This extensively remodeled home sits in the optimal size category for current buyer demand and features over $100,000 in premium upgrades throughout.")
                 
-                st.markdown("**Market Dynamics:** The current real estate market is experiencing mixed trends that strongly favor your property's positioning. The market is experiencing a mix of trends, with larger homes over 2,000 square feet facing longer market times, while homes in the 1,100-1,900 square foot range continue to favor sellers. Your 1,600 square foot home sits in the optimal size category for current buyer demand.")
+                st.markdown("**Market Dynamics:** The current real estate market is experiencing mixed trends that strongly favor your property's positioning. The market is experiencing a mix of trends, with larger homes over 2,000 square feet facing longer market times, while homes in the 1,100-1,900 square foot range continue to favor sellers. Your 1,576 square foot home sits in the optimal size category for current buyer demand.")
                 
                 st.markdown("**Competitive Advantages:** This property benefits from over $100,000 in premium upgrades that justify the premium positioning. Key improvements include a complete roof replacement, new AC system, custom built staircase, and elegant custom deck on the structural side, complemented by a luxury kitchen remodel, custom master suite with elegant shower, custom built-ins, high tech wiring, shiplap feature walls, and new premium flooring throughout the main floor with abundant natural light. These improvements position the home as move-in ready luxury rather than a fixer-upper.")
                 
@@ -1025,7 +1025,7 @@ def main():
             <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 2rem; border-radius: 1rem; margin-bottom: 2rem; border-left: 4px solid #007bff;">
                 <h1 style="margin: 0; color: #495057; font-size: 2.2em;">🏠 Premium Home Pricing Analysis</h1>
                 <h3 style="margin: 0.5rem 0 0 0; color: #6c757d;">12903 158th Street Ct E, Puyallup WA</h3>
-                <p style="margin: 0.5rem 0 0 0; color: #6c757d; font-style: italic;">Extensively remodeled luxury home • 1,600 sq ft • Multi-story</p>
+                <p style="margin: 0.5rem 0 0 0; color: #6c757d; font-style: italic;">Extensively remodeled luxury home • 1,576 sq ft • 3 bed, 2.5 bath • Built 2000</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -1034,7 +1034,7 @@ def main():
             rebecca_sold = rebecca_data.get('sold', pd.DataFrame())
             
             # Calculate pricing analysis using broader market (fixed at 1600 sq ft)
-            pricing = analyze_premium_home_pricing(sunrise_sold, rebecca_sold, 1600)
+            pricing = analyze_premium_home_pricing(sunrise_sold, rebecca_sold, 1576)
             
             if pricing:
                 # MAIN PRICING RECOMMENDATION - Full Width
@@ -1251,7 +1251,7 @@ def main():
             # Get pricing data
             sunrise_sold = sunrise_data.get('sold', pd.DataFrame())
             rebecca_sold = rebecca_data.get('sold', pd.DataFrame())
-            pricing = analyze_premium_home_pricing(sunrise_sold, rebecca_sold, 1600)
+            pricing = analyze_premium_home_pricing(sunrise_sold, rebecca_sold, 1576)
             
             if pricing:
                 st.header("💰 Net Proceeds Calculator")

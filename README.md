@@ -11,7 +11,15 @@ A comprehensive real estate market analysis application for Rebecca Ridge neighb
 
 ## Property Focus
 
-12903 158th Street Ct E - A premium luxury home with extensive renovations including:
+12903 158th Street Ct E - A premium luxury home with extensive renovations:
+- **Size:** 1,576 sq ft
+- **Bedrooms:** 3
+- **Bathrooms:** 2.5
+- **Year Built:** 2000
+- **Lot Size:** 5,628 sq ft
+- **Last Sold:** July 20, 2017 for $265,000
+
+**Premium renovations include:**
 - Complete roof replacement
 - New AC system
 - Custom built staircase
