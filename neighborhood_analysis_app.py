@@ -553,6 +553,7 @@ def main():
             <h1 style="margin: 0; color: #495057; font-size: 2.2em;">📋 Executive Summary</h1>
             <h3 style="margin: 0.5rem 0 0 0; color: #6c757d;">12903 158th Street Ct E Market Analysis</h3>
             <p style="margin: 0.5rem 0 0 0; color: #6c757d; font-style: italic;">Comprehensive real estate market overview and pricing strategy</p>
+            <p style="margin: 1rem 0 0 0; color: #6c757d; font-size: 0.9em;">Prepared by Nathan Coons, Managing Broker - Washington Realty Group</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -1027,6 +1028,7 @@ def main():
                 <h1 style="margin: 0; color: #495057; font-size: 2.2em;">🏠 Premium Home Pricing Analysis</h1>
                 <h3 style="margin: 0.5rem 0 0 0; color: #6c757d;">12903 158th Street Ct E, Puyallup WA</h3>
                 <p style="margin: 0.5rem 0 0 0; color: #6c757d; font-style: italic;">Extensively remodeled luxury home • 1,576 sq ft • 3 bed, 2.5 bath • Built 2000</p>
+                <p style="margin: 1rem 0 0 0; color: #6c757d; font-size: 0.9em;">Prepared by Nathan Coons, Managing Broker - Washington Realty Group</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -1350,6 +1352,7 @@ def main():
     # Footer
     st.markdown("---")
     st.markdown("*Data updated through the latest available MLS records. Analysis includes sold, pending, and active properties.*")
+    st.markdown("**Report prepared by Nathan Coons, Managing Broker - Washington Realty Group**")
 
 if __name__ == "__main__":
     main()
