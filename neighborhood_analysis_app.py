@@ -575,6 +575,8 @@ def main():
                 
                 st.markdown("**Recommendation:** The extensive improvements and premium positioning justify a premium price point to capture the luxury market while remaining competitive within the established range. This strategy leverages the current seller-favorable conditions in your segment while the extensive improvements justify the premium over standard comparable properties.")
                 
+                st.markdown("**Market Timing Alert:** The real estate market is moving every day and appears to be slipping. While current conditions favor sellers in your size segment, this window may not stick around. Acting decisively on pricing and marketing strategy is essential to capitalize on present market conditions before they shift.")
+                
                 # Simple bottom line in box
                 st.markdown(f"""
                 <div style="background-color: #f8f9fa; padding: 1.5rem; border-radius: 0.8rem; border-left: 4px solid #007bff; margin: 2rem 0;">
